@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pBuild": "docker build -t example .",
+    "pUp": "docker run -p 3000:3000 example",
+    "idle": "cp idleserver.js .\\.next\\standalone\\idleserver.js && (cd .\\.next\\standalone &&  node idleserver.js)"
   },
   "dependencies": {
     "@next/font": "13.1.6",

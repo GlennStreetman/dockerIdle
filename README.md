@@ -1,1 +1,1 @@
-Example: Use a script to add a idle shutdown to a Nextjs web server.
+Example: Use a script to add an idle shutdown to a Nextjs/Docker web server.

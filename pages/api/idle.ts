@@ -10,8 +10,8 @@ export default function handler(
   res: NextApiResponse<Data>
 ) {
   console.log('Next: Attempting reset idle queue')
-  fetch('http://localhost:8080/api/idle')
-  .then((response) => response)
-  .then((data) => "Next: Idle Timer Reset complete");
+  // fetch('http://localhost:8080/api/idle')
+  // .then((response) => response)
+  // .then((data) => "Next: Idle Timer Reset complete");
   res.status(200).json({ msg: 'Next: Idle Timer Reset complete' })
 }

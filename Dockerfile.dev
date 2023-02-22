@@ -1,0 +1,14 @@
+FROM node:18-alpine AS base
+FROM base AS deps
+RUN apk update
+RUN apk add --no-cache libc6-compat
+RUN apk add iptables sudo
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+COPY public ./public 
+RUN touch ./serverlogs.log
+RUN chown nextjs:nodejs ./serverlogs.log
+EXPOSE 3000
+ENV PORT 3000
+CMD ["./idleDocker.sh"]

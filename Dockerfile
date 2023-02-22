@@ -13,18 +13,20 @@ RUN npm run build
 
 FROM base AS runner
 WORKDIR /app
-RUN apk add iproute2
+RUN apk update
+RUN apk add iptables sudo
 ENV NODE_ENV production
+# RUN adduser user1
+# RUN adduser user1 sudo
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY idleserver.js ./idleserver.js
-COPY idle.sh ./idle.sh
-USER nextjs
+COPY --chmod=777 idleDocker.sh ./idleDocker.sh
+RUN touch ./serverlogs.log
+RUN chown nextjs:nodejs ./serverlogs.log
+# USER user1
 EXPOSE 3000
 ENV PORT 3000
-# CMD ["node", "idleserver.js"]
-# CMD ["node", "server.js"]
-CMD ["idle.sh"]
+CMD ["./idleDocker.sh"]

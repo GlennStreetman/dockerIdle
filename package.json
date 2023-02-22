@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pBuild": "docker build -t example .",
-    "pUp": "docker run -p 3000:3000 example",
-    "idle": "cp idleserver.js .\\.next\\standalone\\idleserver.js && (cd .\\.next\\standalone &&  node idleserver.js)",
-    "testsh": "cp idle.sh .\\.next\\standalone\\idle.sh && (cd .\\.next\\standalone &&  node idle.sh)"
+    "dBuild": "npm run Build",
+    "dUp": "docker-compose -f compose.dev.yaml up",
+    "pBuild": "DOCKER_BUILDKIT=1 docker build -t example .",
+    "pUp": "docker run -p 3000:3000 --cap-add=NET_ADMIN example",
+    "idle": "cp idleserver.js ./.next/standalone/idleserver.js && (cd ./.next/standalone &&  node idleserver.js)",
+    "testsh": "cp idle.sh ./.next/standalone/idle.sh && (cd ./.next/standalone && chmod u+x idle.sh && ./idle.sh)",
+    "killNode": "lsof -ti tcp:3000 | xargs kill"
   },
   "dependencies": {
     "@next/font": "13.1.6",

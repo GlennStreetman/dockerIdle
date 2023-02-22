@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+    idletest:
+        cap_add:
+          - NET_ADMIN
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        ports:
+            - 3000:3000
+        volumes:
+            - ./.next/standalone:/app/
+            - ./.next/static:/app/.next/static
+            - ./idleDocker.sh:/app/idleDocker.sh
+        command: "sh idleDocker.sh"

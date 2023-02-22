@@ -1,21 +1,25 @@
 #!/bin/sh
 
-iptables -A OUTPUT -p tcp --dport 3000
-iptables -A INPUT -p tcp --dport 3000
+#setup
+port=3000 # HTTP server localhost post
+incrementSet=10 #Warning/idle check timer.
+maxIdleSeconds=61 #Set 1 second higher than multiple of incrementSet.
+nodeServer=server.js
 
-warningSet=5 # warn every x seconds
-incrementSet=5 #increment up x seconds on each warning
-maxIdleSeconds=21
+#Global scripts vars
 keepAlive="$(date +%s)";
 now="$(date +%s)";
 lastMsg=0;
 tcpCount=0
-IdleNextWarn=$warningSet #next warning fires off on
+IdleNextWarn=$incrementSet #next warning fires off on
 idleIncrement=0 #reset to zero, trails idleNextWarn by incrementSet
 
+iptables -A OUTPUT -p tcp --dport $port
+iptables -A INPUT -p tcp --dport $port
+
 echo "starting next server";
-node server.js >> ./serverlogs.log &
-echo "logging to serverlogs.log"
+> ./serverlogs.log #emptpy logs for run
+node $nodeServer >> ./serverlogs.log & # start node server
 while [ $(($now - $keepAlive)) -lt $maxIdleSeconds ]
 do
     now="$(date +%s)";
@@ -36,7 +40,7 @@ do
         connectionCount=$(iptables -n -L -v -x -w | grep 3000 |  awk '{sum+=$1} END  {print sum}')
         if [ $connectionCount -ne $tcpCount ]
         then
-            echo "reset triggered"
+            # echo "reset triggered"
             tcpCount=$connectionCount
             keepAlive=$(date +%s)
         fi
@@ -45,14 +49,13 @@ do
     if [ $idleIncrement -gt $(( $now - $keepAlive )) ] 
     then
         echo "resetting queue"
-        IdleNextWarn=$warningSet
+        IdleNextWarn=$incrementSet
         idleIncrement=0
     fi
     
 done
 lsof -ti tcp:3000 | xargs kill
 
-echo '' > ./serverlogs.log &
 echo
 echo "Idle time limit exceeded, shutting down."
 echo

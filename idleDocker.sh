@@ -54,8 +54,14 @@ do
     fi
     
 done
-lsof -ti tcp:3000 | xargs kill
 
 echo
 echo "Idle time limit exceeded, shutting down."
 echo
+# run shutdown lambda
+aws lambda invoke \ 
+    --function-name toggle-ec2-instance \
+    --payload '{ "hibernate": "true" }' \
+    response.json
+
+# aws lambda invoke --function-name toggle-ec2-instance --payload '{ "hibernate": "true" }' response.json

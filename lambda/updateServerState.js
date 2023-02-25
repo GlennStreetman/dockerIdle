@@ -4,14 +4,14 @@ const client = new EC2Client({ region: "us-east-2" });
 
 export const handler = async(event) => {
 
-    const queryParams = event.queryStringParameters
-    console.log(queryParams)
-
-    const ec2Params = queryParams.hibernate === true ? {
+    console.log("event", event.hibernate)
+    if (event.hibernate === "true") console.log('Hibernating Instance')
+    if (event.hibernate !== "true") console.log('Starting Instance')
+    const ec2Params = event.hibernate === "true" ? {
         InstanceIds: [
             "i-08cfa61dffbf419fb"
         ],
-        Hibernate: queryParams.hibernate
+        Hibernate: true
     } :
     {
         InstanceIds: [
@@ -19,7 +19,7 @@ export const handler = async(event) => {
         ]
     }
 
-    const command = queryParams.hibernate === true ? 
+    const command = event.hibernate === "true" ? 
         new StopInstancesCommand(ec2Params) :
         new StartInstancesCommand(ec2Params)
 
@@ -31,7 +31,7 @@ export const handler = async(event) => {
     } finally {
         const response = {
             statusCode: 200,
-            body: JSON.stringify(`i-08cfa61dffbf419fb state changed to: ${queryParams.hibernate}`),
+            body: JSON.stringify(`i-08cfa61dffbf419fb state changed to: ${event.hibernate}`),
         };
         return response;
     }

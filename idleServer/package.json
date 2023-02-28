@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "dBuild": "npm run Build",
+    "dBuild": "npm run build",
     "dUp": "docker-compose -f compose.dev.yaml up",
     "pBuild": "DOCKER_BUILDKIT=1 docker build -f Dockerfile.prod -t idlebuild .",
     "pUp": "docker run -p 3000:3000 --restart unless-stopped --cap-add=NET_ADMIN idlebuild",

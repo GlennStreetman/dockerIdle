@@ -25,16 +25,13 @@ export const handler = async(event) => {
                         {
                         "Action": "UPSERT",
                         "ResourceRecordSet": {
-                            "Failover": "PRIMARY", 
-                            "HealthCheckId": "b4f78cfd-40e2-4207-a124-0e7900141006", 
-                            "Name": "idle.gstreet.dev", 
+                            "Name": "server.gstreet.dev", 
                             "ResourceRecords": [
                             {
                                 "Value": ec2IP
                             }
                             ],
-                            "SetIdentifier": "primary", 
-                            "TTL": 15, 
+                            "TTL": 5, 
                             "Type": "A"
                         }
                         }

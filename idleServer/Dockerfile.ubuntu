@@ -1,0 +1,52 @@
+FROM ubuntu:latest AS base
+RUN apt-get update
+ENV NODE_VERSION=16.13.0
+RUN apt install -y curl
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+ENV NVM_DIR=/root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+RUN npm --version
+
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM base AS runner
+WORKDIR /app
+
+USER root
+RUN apt-get update && apt-get install -y supervisor nginx
+# RUN apt-get update && apt-get install -y supervisor iptables iptables-persistent rsyslog sudo
+# RUN echo iptables -A INPUT -p tcp --dport 3000 --syn -j LOG --log-level 4 --log-prefix \"HTTPS IN: \" >> /etc/iptables/rules.v4
+# RUN echo iptables -A OUTPUT -p tcp --dport 3000 --syn -j LOG --log-level 4 --log-prefix \"HTTPS OUT: \" >> /etc/iptables/rules.v4
+# RUN echo "kern.warning     /var/log/iptables.log" >> /etc/rsyslog.conf
+# COPY ./supervisord/rsyslog.conf /etc/supervisor/conf.d/rsyslog.conf
+COPY ./supervisord/nginx.conf /etc/supervisor/conf.d/nginx.conf
+COPY ./supervisord/sh.conf /etc/supervisor/conf.d/sh.conf
+COPY ./nginx/yoursite.conf /etc/nginx/conf.d/yoursite.conf
+
+ENV NODE_ENV production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --chmod=777 idleDocker.sh ./idleDocker.sh
+COPY --chmod=777 run.sh /run.sh
+RUN touch ./serverlogs.log
+RUN chown nextjs:nodejs ./serverlogs.log
+# RUN sed -i '/imklog/s/^/#/' /etc/rsyslog.conf
+EXPOSE 80
+ENV PORT 3000
+CMD ["/run.sh"]

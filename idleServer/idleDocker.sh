@@ -3,7 +3,7 @@
 #setup
 port=3000 # HTTP server localhost post
 incrementSet=10 #Warning/idle check timer.
-maxIdleSeconds=901 #Set 1 second higher than multiple of incrementSet.
+maxIdleSeconds=31 #Set 1 second higher than multiple of incrementSet.
 nodeServer=server.js
 
 #Global scripts vars
@@ -13,6 +13,7 @@ lastMsg=0;
 tcpCount=0
 IdleNextWarn=$incrementSet #next warning fires off on
 idleIncrement=0 #reset to zero, trails idleNextWarn by incrementSet
+requestCount=0 #count of inbound requests. New inbound requests reset idle timer.
 
 # iptables -A OUTPUT -p tcp --dport $port
 # iptables -A INPUT -p tcp --dport $port
@@ -36,22 +37,24 @@ do
         tail -$printCount ./serverlogs.log
         lastMsg=$msgCount
     fi
+
     #stepped warning messages
-    # if [ $(( $now - $keepAlive )) -gt $IdleNextWarn ] 
-    # then
-    #     echo "Idle for: $IdleNextWarn"
-    #     idleIncrement=$IdleNextWarn
-    #     IdleNextWarn=$(( $IdleNextWarn + $incrementSet))
+    if [ $(( $now - $keepAlive )) -gt $IdleNextWarn ] 
+    then
+        echo "Idle for: $IdleNextWarn"
+        idleIncrement=$IdleNextWarn
+        IdleNextWarn=$(( $IdleNextWarn + $incrementSet))
         
-    #     connectionCount=$(iptables -n -L -v -x -w | grep 3000 |  awk '{sum+=$1} END  {print sum}')
-    #     if [ $connectionCount -ne $tcpCount ]
-    #     then
-    #         # echo "reset triggered"
-    #         tcpCount=$connectionCount
-    #         keepAlive=$(date +%s)
-    #     fi
-    # fi
-    # reset increment
+        connectionCount=$( wc -l ./access.log | awk '{ print $1 }' )
+        # connectionCount=$(iptables -n -L -v -x -w | grep 3000 |  awk '{sum+=$1} END  {print sum}')
+        if [ $connectionCount -ne $tcpCount ]
+        then
+            # echo "reset triggered"
+            tcpCount=$connectionCount
+            keepAlive=$(date +%s)
+        fi
+    fi
+    reset increment
     if [ $idleIncrement -gt $(( $now - $keepAlive )) ] 
     then
         echo "resetting queue"
